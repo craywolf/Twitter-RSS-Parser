@@ -44,6 +44,16 @@ for ($i=0; $i<$arrLen; $i++) {
 			$feedContent = str_replace('#'.$hash_text, $linkstr, $feedContent);
 		}
 		
+		// Now that we're done modifying the body of the tweet itself, wrap it in <p> tags.
+		// *** PREPENDING / APPENDING additional info should be done AFTER this section
+		$feedContent = '<p>'.$feedContent.'</p>';
+		
+		// Append a twitter oembed-style citation line
+		$feedContent .= '<p>&mdash; '.$td[$i]['user']['name'].' (@'.$td[$i]['user']['screen_name'].') ' .
+		                '<a href="http://twitter.com/'.$td[$i]['user']['screen_name'].'/statuses/'. $td[$i]['id_str'].'" ' .
+						$linkOpts . '>' .
+						date('F d, Y',strtotime($td[$i]['created_at'])).'</a></p>';
+
 		// And embed photos
 		for ($j = 0; $j < count($td[$i]['entities']['media']); $j++) {
 			if ($td[$i]['entities']['media'][$j]['type'] == 'photo') {
@@ -60,7 +70,10 @@ for ($i=0; $i<$arrLen; $i++) {
 			}
 		}
 		
-		// A less-than-ideal way of handling tweets in_reply_to something
+		// Wrap the whole thing in a blockquote (also following twitter's oembed style)
+		$feedContent = '<blockquote>'.$feedContent.'</blockquote>';
+		
+		// Add an in-reply-to marker above the blockquote, if it's a reply
 		// TODO: Replace this with a JSON request that actually fetches and embeds the parent tweet?
 		//       Be sure to limit recursion if you do this.
 		if ($td[$i]['in_reply_to_status_id']) {
