@@ -14,7 +14,7 @@ for ($i=0; $i<$arrLen; $i++) {
 		print('		<link href="https://twitter.com/'.$td[$i]['user']['screen_name'].'/statuses/'. $td[$i]['id_str'] .'" rel="alternate" type="text/html"/>'. PHP_EOL);
 		
 		$summaryContent = $td[$i]['text'];
-		$feedContent = '<p>' . $summaryContent . '</p>';
+		$feedContent = $summaryContent;
 		
 		// Loop through the list of links and beautify them for title/summary,
 		// and linkify them for the article content
