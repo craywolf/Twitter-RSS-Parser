@@ -54,6 +54,7 @@ for ($i=0; $i<$arrLen; $i++) {
 				
 				$media_link = '<a href="'.$expanded_url.'" '.$linkOpts.'>'.$display_url.'</a>';
 				
+				$summaryContent = str_replace($url, $display_url, $summaryContent);
 				$feedContent = str_replace($url, $media_link, $feedContent);
 				$feedContent = $feedContent . PHP_EOL . '<p><img src="'.$media_url.'" /></p>';
 			}
