@@ -12,7 +12,7 @@ for ($i=0; $i<$arrLen; $i++) {
 		print('		<link href="https://twitter.com/'.$td[$i]['user']['screen_name'].'/statuses/'. $td[$i]['id_str'] .'" rel="alternate" type="text/html"/>'. PHP_EOL);
 		
 		$summaryContent = $td[$i]['text'];
-		$feedContent = $summaryContent;
+		$feedContent = '<p>' . $summaryContent . '</p>';
 		
 		// Loop through the list of links and beautify them for title/summary,
 		// and linkify them for the article content
@@ -42,6 +42,21 @@ for ($i=0; $i<$arrLen; $i++) {
 			$feedContent = str_replace('#'.$hash_text, $linkstr, $feedContent);
 		}
 		
+		// And embed photos
+		for ($j = 0; $j < count($td[$i]['entities']['media']); $j++) {
+			if ($td[$i]['entities']['media'][$j]['type'] == 'photo') {
+				$url = $td[$i]['entities']['media'][$j]['url'];
+				$display_url = $td[$i]['entities']['media'][$j]['display_url'];
+				$media_url = $td[$i]['entities']['media'][$j]['media_url'];
+				$expanded_url = $td[$i]['entities']['media'][$j]['expanded_url'];
+				
+				$media_link = '<a href="'.$expanded_url.'">'.$display_url.'</a>';
+				
+				$feedContent = str_replace($url, $media_link, $feedContent);
+				$feedContent = $feedContent . PHP_EOL . '<p><img src="'.$media_url.'" /></p>';
+			}
+		}
+		
 		// A less-than-ideal way of handling tweets in_reply_to something
 		// TODO: Replace this with a JSON request that actually fetches and embeds the parent tweet?
 		//       Be sure to limit recursion if you do this.
@@ -55,7 +70,7 @@ for ($i=0; $i<$arrLen; $i++) {
 		
 		print('		<title>'.$td[$i]['user']['screen_name'].': '.htmlspecialchars($summaryContent).'</title>'. PHP_EOL);
 		print('		<summary type="html"><![CDATA['.$td[$i]['user']['screen_name'].': '.$summaryContent.']]></summary>'. PHP_EOL);
-		print('		<content type="html"><![CDATA[<p>'.$feedContent.'</p>]]></content>'. PHP_EOL);
+		print('		<content type="html"><![CDATA['.$feedContent.']]></content>'. PHP_EOL);
 		print('		<updated>'.date('c', strtotime($td[$i]['created_at'])).'</updated>'. PHP_EOL);
 		print('		<author><name>'.$td[$i]['user']['screen_name'].'</name></author>'. PHP_EOL);
 		
