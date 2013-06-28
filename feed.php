@@ -52,7 +52,7 @@ for ($i=0; $i<$arrLen; $i++) {
 				$media_url = $td[$i]['entities']['media'][$j]['media_url'];
 				$expanded_url = $td[$i]['entities']['media'][$j]['expanded_url'];
 				
-				$media_link = '<a href="'.$expanded_url.'">'.$display_url.'</a>';
+				$media_link = '<a href="'.$expanded_url.'" '.$linkOpts.'>'.$display_url.'</a>';
 				
 				$feedContent = str_replace($url, $media_link, $feedContent);
 				$feedContent = $feedContent . PHP_EOL . '<p><img src="'.$media_url.'" /></p>';
