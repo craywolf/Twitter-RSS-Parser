@@ -10,13 +10,52 @@ for ($i=0; $i<$arrLen; $i++) {
 	print(PHP_EOL. '	<entry>'. PHP_EOL);
 		print('		<id>tag:twitter.com,' . date("Y-m-d", strtotime($td[$i]['created_at'])) . ':/' . $td[$i]['user']['screen_name'] . '/statuses/' . $td[$i]['id_str'] . '</id>'. PHP_EOL);
 		print('		<link href="https://twitter.com/'.$td[$i]['user']['screen_name'].'/statuses/'. $td[$i]['id_str'] .'" rel="alternate" type="text/html"/>'. PHP_EOL);
-		print('		<title>'.$td[$i]['user']['screen_name'].': '.htmlspecialchars($td[$i]['text']).'</title>'. PHP_EOL);
-		print('		<summary type="html"><![CDATA['.$td[$i]['user']['screen_name'].': '.$td[$i]['text'].']]></summary>'. PHP_EOL);
 		
-		$feedContent = '		<content type="html"><![CDATA[<p>'.$td[$i]['text'].'</p>]]></content>';
-		$text = processString($feedContent);
+		$summaryContent = $td[$i]['text'];
+		$feedContent = $summaryContent;
 		
-		print($text . PHP_EOL);
+		// Loop through the list of links and beautify them for title/summary,
+		// and linkify them for the article content
+		for ($j = 0; $j < count($td[$i]['entities']['urls']); $j++) {
+			$url = $td[$i]['entities']['urls'][$j]['url'];
+			$expanded_url = $td[$i]['entities']['urls'][$j]['expanded_url'];
+			$display_url = $td[$i]['entities']['urls'][$j]['display_url'];
+			$linkstr = '<a href="'.$expanded_url.'">'.$display_url.'</a>';
+			
+			$summaryContent = str_replace($url, $display_url, $summaryContent);
+			$feedContent = str_replace($url, $linkstr, $feedContent);
+		}
+		
+		// Now loop through and linkify mentions
+		for ($j = 0; $j < count($td[$i]['entities']['user_mentions']); $j++) {
+			$screen_name = $td[$i]['entities']['user_mentions'][$j]['screen_name'];
+			$linkstr = '<a href="http://twitter.com/'.$screen_name.'">@'.$screen_name.'</a>';
+			
+			$feedContent = str_replace('@'.$screen_name, $linkstr, $feedContent);
+		}
+		
+		// And linkify hashtags
+		for ($j = 0; $j < count($td[$i]['entities']['hashtags']); $j++) {
+			$hash_text = $td[$i]['entities']['hashtags'][$j]['text'];
+			$linkstr = '<a href="http://twitter.com/search?q=%23'.$hash_text.'&src=hash">#'.$hash_text.'</a>';
+			
+			$feedContent = str_replace('#'.$hash_text, $linkstr, $feedContent);
+		}
+		
+		// A less-than-ideal way of handling tweets in_reply_to something
+		// TODO: Replace this with a JSON request that actually fetches and embeds the parent tweet?
+		//       Be sure to limit recursion if you do this.
+		if ($td[$i]['in_reply_to_status_id']) {
+			$parent_sn = $td[$i]['in_reply_to_screen_name'];
+			$parent_link = '<a href="http://twitter.com/'.$parent_sn.'/statuses/'.$td[$i]['in_reply_to_status_id_str'].'">@'.$parent_sn.'</a>';
+			
+			$feedContent = '<p><em>In reply to '.$parent_link.':</em></p>'.PHP_EOL.$feedContent;
+		}
+			
+		
+		print('		<title>'.$td[$i]['user']['screen_name'].': '.htmlspecialchars($summaryContent).'</title>'. PHP_EOL);
+		print('		<summary type="html"><![CDATA['.$td[$i]['user']['screen_name'].': '.$summaryContent.']]></summary>'. PHP_EOL);
+		print('		<content type="html"><![CDATA[<p>'.$feedContent.'</p>]]></content>'. PHP_EOL);
 		print('		<updated>'.date('c', strtotime($td[$i]['created_at'])).'</updated>'. PHP_EOL);
 		print('		<author><name>'.$td[$i]['user']['screen_name'].'</name></author>'. PHP_EOL);
 		
