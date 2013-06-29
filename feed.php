@@ -44,6 +44,22 @@ for ($i=0; $i<$arrLen; $i++) {
 			$feedContent = str_replace('#'.$hash_text, $linkstr, $feedContent);
 		}
 		
+		// And linkify photos
+		if(isset($td[$i]['entities']['media'])) {
+			for ($j = 0; $j < count($td[$i]['entities']['media']); $j++) {
+				if ($td[$i]['entities']['media'][$j]['type'] == 'photo') {
+					$url = $td[$i]['entities']['media'][$j]['url'];
+					$display_url = $td[$i]['entities']['media'][$j]['display_url'];
+					$expanded_url = $td[$i]['entities']['media'][$j]['expanded_url'];
+					
+					$media_link = '<a href="'.$expanded_url.'" '.$linkOpts.'>'.$display_url.'</a>';
+					
+					$summaryContent = str_replace($url, $display_url, $summaryContent);
+					$feedContent = str_replace($url, $media_link, $feedContent);
+				}
+			}
+		}
+
 		// Now that we're done modifying the body of the tweet itself, wrap it in <p> tags.
 		// *** PREPENDING / APPENDING additional info should be done AFTER this section
 		$feedContent = '<p>'.$feedContent.'</p>';
