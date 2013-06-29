@@ -11,6 +11,7 @@ $query = array( // query parameters
 	'exclude_replies' => $home_exclude_replies,
 	'contributor_details' => $home_contributor_details,
 	'include_rts' => $home_include_rts,
+	'include_entities' => 'true'
 );
 
 include "functions.php";
