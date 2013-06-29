@@ -16,8 +16,12 @@ for ($i=0; $i<$arrLen; $i++) {
 		$summaryContent = $td[$i]['text'];
 		$feedContent = $summaryContent;
 		
-		// Loop through the list of links and beautify them for title/summary,
-		// and linkify them for the article content
+		/**
+		 * Begin turning embedded entities into links.
+		 * Fortunately most of the info we need is in twitter's JSON.
+		 */
+		 
+		// Link URLs
 		for ($j = 0; $j < count($td[$i]['entities']['urls']); $j++) {
 			$url = $td[$i]['entities']['urls'][$j]['url'];
 			$expanded_url = $td[$i]['entities']['urls'][$j]['expanded_url'];
@@ -28,7 +32,7 @@ for ($i=0; $i<$arrLen; $i++) {
 			$feedContent = str_replace($url, $linkstr, $feedContent);
 		}
 		
-		// Now loop through and linkify mentions
+		// Link mentions
 		for ($j = 0; $j < count($td[$i]['entities']['user_mentions']); $j++) {
 			$screen_name = $td[$i]['entities']['user_mentions'][$j]['screen_name'];
 			$linkstr = '<a href="http://twitter.com/'.$screen_name.'" '.$linkOpts.'>@'.$screen_name.'</a>';
@@ -36,7 +40,7 @@ for ($i=0; $i<$arrLen; $i++) {
 			$feedContent = str_replace('@'.$screen_name, $linkstr, $feedContent);
 		}
 		
-		// And linkify hashtags
+		// Link hashtags
 		for ($j = 0; $j < count($td[$i]['entities']['hashtags']); $j++) {
 			$hash_text = $td[$i]['entities']['hashtags'][$j]['text'];
 			$linkstr = '<a href="http://twitter.com/search?q=%23'.$hash_text.'&src=hash" '.$linkOpts.'>#'.$hash_text.'</a>';
@@ -44,7 +48,7 @@ for ($i=0; $i<$arrLen; $i++) {
 			$feedContent = str_replace('#'.$hash_text, $linkstr, $feedContent);
 		}
 		
-		// And linkify photos
+		// Link photos
 		if(isset($td[$i]['entities']['media'])) {
 			for ($j = 0; $j < count($td[$i]['entities']['media']); $j++) {
 				if ($td[$i]['entities']['media'][$j]['type'] == 'photo') {
@@ -59,9 +63,11 @@ for ($i=0; $i<$arrLen; $i++) {
 				}
 			}
 		}
+		/**
+		 * Finished linking embedded entities
+		 */
 
 		// Now that we're done modifying the body of the tweet itself, wrap it in <p> tags.
-		// *** PREPENDING / APPENDING additional info should be done AFTER this section
 		$feedContent = '<p>'.$feedContent.'</p>';
 		
 		// Append a twitter oembed-style citation line
@@ -84,9 +90,11 @@ for ($i=0; $i<$arrLen; $i++) {
 		// Wrap the whole thing in a blockquote (also following twitter's oembed style)
 		$feedContent = '<blockquote>'.$feedContent.'</blockquote>';
 		
-		// Add an in-reply-to marker above the blockquote, if it's a reply
-		// TODO: Replace this with a JSON request that actually fetches and embeds the parent tweet?
-		//       Be sure to limit recursion if you do this.
+		/**
+		 * Add an in-reply-to marker above the blockquote, if it's a reply
+		 * TODO: Replace this with a JSON request that actually fetches and embeds the parent tweet?
+		 *       Be sure to limit recursion if you do this.
+		 */
 		if ($td[$i]['in_reply_to_status_id']) {
 			$parent_sn = $td[$i]['in_reply_to_screen_name'];
 			$parent_link = '<a href="http://twitter.com/'.$parent_sn.'/statuses/'.$td[$i]['in_reply_to_status_id_str'].'" '.$linkOpts.'>@'.$parent_sn.'</a>';
@@ -94,7 +102,9 @@ for ($i=0; $i<$arrLen; $i++) {
 			$feedContent = '<p><em>In reply to '.$parent_link.':</em></p>'.PHP_EOL.$feedContent;
 		}
 		
-		
+		/**
+		 * Finish outputting the XML
+		 */
 		print('		<title>'.$td[$i]['user']['screen_name'].': '.htmlspecialchars($summaryContent).'</title>'. PHP_EOL);
 		print('		<summary type="html"><![CDATA['.$td[$i]['user']['screen_name'].': '.$summaryContent.']]></summary>'. PHP_EOL);
 		print('		<content type="html"><![CDATA['.$feedContent.']]></content>'. PHP_EOL);
